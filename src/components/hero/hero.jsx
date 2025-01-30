@@ -1,25 +1,30 @@
 import React from 'react'
 import MovieService from '../../services/movie-service'
+import Spinner from '../spinner/spinner'
+import Error from '../error/error'
 import './hero.scss'
 
 class Hero extends React.Component {
 	constructor(props) {
 		super(props)
 		this.state = {
-			name: null,
-			description: null,
-			thumbnail: null,
-			id: null,
+			movie: {},
+			loading: true,
+			error: false,
 		}
 		this.movieService = new MovieService()
 		this.getMovie()
 	}
 	getMovie = () => {
-		this.movieService.getRandomMovie().then(res => this.setState(res))
+		this.movieService
+			.getRandomMovie()
+			.then(res => this.setState({ movie: res }))
+			.catch(() => this.setState({ error: true }))
+			.finally(() => this.setState({ loading: false }))
 	}
 
 	render() {
-		const { name, description, id, thumbnail } = this.state
+		const { movie, loading } = this.state
 
 		return (
 			<div className='hero'>
@@ -36,20 +41,13 @@ class Hero extends React.Component {
 				</div>
 
 				<div className='hero__movie'>
-					<img src={thumbnail} alt={name} />
-
-					<div className='hero__movie-descr'>
-						<h2>{name}</h2>
-						<p>
-							{description && description.length >= 200
-								? `${description.slice(0, 200)}...`
-								: description}
-						</p>
-						<div>
-							<button className='btn btn-secondary'>Random movie</button>
-							<button className='btn btn-primary'>Details</button>
+					{!loading ? (
+						<div className='loader-wrapper'>
+							<Spinner />
 						</div>
-					</div>
+					) : (
+						<Content movie={movie} />
+					)}
 				</div>
 			</div>
 		)
@@ -57,3 +55,24 @@ class Hero extends React.Component {
 }
 
 export default Hero
+
+const Content = ({ movie }) => {
+	return (
+		<>
+			<img src={movie.thumbnail} alt={movie.name} />
+
+			<div className='hero__movie-descr'>
+				<h2>{movie.name}</h2>
+				<p>
+					{movie.description && movie.description.length >= 200
+						? `${movie.description.slice(0, 200)}...`
+						: movie.description}
+				</p>
+				<div>
+					<button className='btn btn-secondary'>Random movie</button>
+					<button className='btn btn-primary'>Details</button>
+				</div>
+			</div>
+		</>
+	)
+}
